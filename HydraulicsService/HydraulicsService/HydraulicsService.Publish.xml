@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<publishData>
+  <publishProfile publishUrl="M:\HH\WebService" deleteExistingFiles="False" ftpAnonymousLogin="False" ftpPassiveMode="True" msdeploySite="" msdeploySiteID="" msdeployRemoteSitePhysicalPath="" msdeployAllowUntrustedCertificate="False" msdeploySkipExtraFilesOnServer="True" msdeployMarkAsApp="False" profileName="Profile1" publishMethod="FileSystem" replaceMatchingFiles="True" userName="" savePWD="False" userPWD="" SelectedForPublish="True">
+    <file relUrl="bin/HydraulicsService.pdb" publishTime="03/22/2012 15:06:13" />
+    <file relUrl="bin/HydraulicsService.dll" publishTime="03/22/2012 15:06:13" />
+    <file relUrl="GutterService.asmx" publishTime="03/14/2012 14:21:30" />
+    <file relUrl="Web.config" publishTime="03/22/2012 15:06:18" />
+  </publishProfile>
+</publishData>

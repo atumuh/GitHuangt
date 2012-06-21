@@ -1,0 +1,227 @@
+﻿@model Hydraulics.Models.DepthData_Normal
+
+@{
+    ViewBag.Title = "Normal Depth Page";
+}
+
+<h2>Normal Depth</h2>
+
+<script type="text/javascript" >
+    window.onload = function () {
+        //alert("aaaaa");
+        DrawNormalDepth2D("NormalDepthCanvas", @Model.Diameter, @Model.Depth);
+    }
+
+    function DrawNormalDepth2D(id, Diameter, Depth)
+    {
+        var canvas = document.getElementById(id);
+        canvas.width = 400;
+        canvas.height = 400;
+        var context = canvas.getContext("2d");
+
+        context.lineWidth = 1;
+
+        var whiteColor = 'rgb(255,255,255)';
+        var coordColor = 'rgb(200,200,200)';
+        var textColor = 'rgb(0,0,200)';
+        var waterColor = 'rgb(146,219,255)';
+        var pipeColor = 'rgb(100,100,100)';
+
+        var X_dim = canvas.width * 0.05;
+        var X_min = canvas.width * 0.1;
+        var X_max = canvas.width * 0.9;
+        var Y_dim = canvas.height * 0.95;
+        var Y_min = canvas.height * 0.9;
+        var Y_max = canvas.height * 0.1;
+
+        var Step = GetScale(Diameter);
+
+        var Scale = canvas.width * 0.8 / (Diameter + 2 * Step);
+        var X_zero = X_min + Step * Scale;
+        var Y_zero = Y_min - Step * Scale;
+
+        var radius = 0.5 * Diameter;
+        if (Depth > 0)
+        {
+            if (Depth < radius)
+            {
+                var t = Math.acos(radius - Depth) / (radius);
+                context.beginPath();
+                context.moveTo(canvas.width / 2 + Math.sin(t) * radius * Scale, canvas.height / 2 + Math.cos(t) * radius * Scale);
+                context.arcTo(canvas.width / 2, canvas.height / 2 + radius * Scale / Math.cos(t),
+                    canvas.width / 2 - Math.sin(t) * radius * Scale, canvas.height / 2 + Math.cos(t) * radius * Scale, radius * Scale);
+                context.lineTo(canvas.width / 2 - Math.sin(t) * radius * Scale, canvas.height / 2 + Math.cos(t) * radius * Scale);
+                //context.arc(canvas.width / 2, canvas.height / 2, radius * Scale, 0.5 * Math.PI - t, 0.5 * Math.PI + t, false);
+                context.fillStyle = waterColor;
+                context.fill();
+            }
+            else
+            {
+                context.arc(canvas.width / 2, canvas.height / 2, radius * Scale, 0, 2 * Math.PI, false);
+                context.fillStyle = waterColor;
+                context.fill();
+                var t = Math.asin(Depth - radius) / (radius);
+                context.beginPath();
+                context.moveTo(canvas.width / 2 + Math.cos(t) * radius * Scale, canvas.height / 2 - Math.sin(t) * radius * Scale);
+                context.arcTo(canvas.width / 2, canvas.height / 2 - radius * Scale / Math.sin(t),
+                    canvas.width / 2 - Math.cos(t) * radius * Scale, canvas.height / 2 - Math.sin(t) * radius * Scale, radius * Scale);
+                context.lineTo(canvas.width / 2 - Math.cos(t) * radius * Scale, canvas.height / 2 - Math.sin(t) * radius * Scale);
+                //context.arc(canvas.width / 2, canvas.height / 2, radius * Scale, - t, Math.PI + t, false);
+                context.fillStyle = whiteColor;
+                context.fill();
+            }
+        }
+
+        context.font = "10pt Calibri";
+        // textAlign aligns text horizontally relative to placement
+        context.textAlign = "center";
+        // textBaseline aligns text vertically relative to font style
+        context.textBaseline = "middle";
+        for (var i = 0; i <= (X_max - X_zero) / Scale; i += Step)
+        {
+            var x = X_zero + i * Scale;
+            context.fillStyle = textColor;
+            context.fillText(Math.round(i * 100) / 100, x, Y_dim);
+            context.moveTo(x, Y_min);
+            context.lineTo(x, Y_max);
+            context.strokeStyle = coordColor;
+            context.stroke();
+        }
+        context.moveTo(X_min, Y_min);
+        context.lineTo(X_min, Y_max);
+        context.strokeStyle = coordColor;
+        context.stroke();
+        context.moveTo(X_max, Y_min);
+        context.lineTo(X_max, Y_max);
+        context.strokeStyle = coordColor;
+        context.stroke();
+
+        var y = Y_zero;
+        for (var i = 0; i < (Y_zero - Y_max) / Scale; i += Step)
+        {
+            var y = Y_zero - i * Scale;
+            context.fillStyle = textColor;
+            context.fillText(Math.round(i * 100) / 100, X_dim, y);
+            context.moveTo(X_min, y);
+            context.lineTo(X_max, y);
+            context.strokeStyle = coordColor;
+            context.stroke();
+        }
+        context.moveTo(X_min, Y_min);
+        context.lineTo(X_max, Y_min);
+        context.strokeStyle = coordColor;
+        context.stroke();
+        context.moveTo(X_min, Y_max);
+        context.lineTo(X_max, Y_max);
+        context.strokeStyle = coordColor;
+        context.stroke();
+
+        context.beginPath();
+        context.arc(canvas.width / 2, canvas.height / 2, radius * Scale, 0, 2 * Math.PI, false);
+        context.closePath();
+        context.strokeStyle = pipeColor;
+        context.stroke();
+    }
+
+    function GetScale(ChannelWidth)
+    {
+        var StepX = 0.5;
+        if (ChannelWidth <= 0.5)
+            StepX = 0.1;
+        else if (ChannelWidth <= 1)
+            StepX = 0.25;
+        else if (ChannelWidth <= 4.5)
+            StepX = 0.5;
+        else if (ChannelWidth <= 10)
+            StepX = 1;
+        else if (ChannelWidth <= 20)
+            StepX = 2;
+        else if (ChannelWidth <= 75)
+            StepX = 5;
+        else if (ChannelWidth <= 150)
+            StepX = 10;
+        else if (ChannelWidth <= 200)
+            StepX = 20;
+        else if (ChannelWidth <= 500)
+            StepX = 50;
+        else
+            StepX = 100;
+
+        return StepX;
+    }
+</script>
+
+@using (Html.BeginForm(FormMethod.Post))
+{
+
+<fieldset>
+    <legend>Normal Depth</legend>
+    <table id="NormalDepth" title="Normal Depth">
+        <tr></tr>
+        <tr>
+            <td>
+    <table id="PipeData" title="Pipe Data">
+        <tr>
+            <td>Items</td>
+            <td>Value</td>
+            <td>Unit</td>
+        </tr>
+        <tr>
+            <td>Diameter:</td>
+            <td>@Html.EditorFor(model => model.Diameter)</td>
+            <td>(ft)</td>
+        </tr>
+        <tr>
+            <td>Manning's Roughness:</td>
+            <td>@Html.EditorFor(model => model.ManningRoughness)</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Elevation Up:</td>
+            <td>@Html.EditorFor(model => model.ElevationUp)</td>
+            <td>(ft)</td>
+        </tr>
+        <tr>
+            <td>Elevation Down:</td>
+            <td>@Html.EditorFor(model => model.ElevationDown)</td>
+            <td>(ft)</td>
+        </tr>
+        <tr>
+            <td>Length:</td>
+            <td>@Html.EditorFor(model => model.Length)</td>
+            <td>(ft)</td>
+        </tr>
+        <tr>
+            <td>Design Flow:</td>
+            <td>@Html.EditorFor(model => model.DesignFlow)</td>
+            <td>(cfs)</td>
+        </tr>
+        <tr>
+            <td>Result:</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Depth:</td>
+            <td><input type="text" value="@Model.Depth" /></td>
+            <td>(ft)</td>
+        </tr>
+    </table>
+
+<div id="calculate">
+    <div id="calculatebtn">
+        <input id="Calculate" type="submit" value="Calculate" />
+    </div>
+</div>
+
+            </td>
+            <td>
+    <canvas id="NormalDepthCanvas" style="width:400px;height:400px" style="border:1px solid #c3c3c3;">
+    <p>Your browser does not support the canvas element.</p>
+    </canvas>
+            </td>
+        </tr>
+    </table>
+</fieldset>
+    
+}

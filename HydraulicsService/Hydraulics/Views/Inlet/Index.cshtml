@@ -1,0 +1,355 @@
+﻿@model Hydraulics.Models.InletDataEx
+
+@{
+    ViewBag.Title = "Inlet Page";
+}
+
+<h2>Inlet</h2>
+
+<script type="text/javascript" >
+    window.onload = function () {
+        //alert("aaaaa");
+        DrawGutter2D("inletCanvas", @Model.inletData.GutterWidth, @Model.inletData.CrossSlopeW, @Model.inletData.CrossSlopeX, @Model.inletResult.GutterIn.GutterDepth, @Model.inletResult.GutterIn.GutterSpread);
+    }
+
+    function DrawGutter2D(id, GutterWidth, CrossSlopeW, CrossSlopeX, GutterDepth, GutterSpread)
+    {
+        var canvas = document.getElementById(id);
+        canvas.width = 800;
+        canvas.height = 400;
+        var context = canvas.getContext("2d");
+
+        var ChannelHight = 0.5;
+        if (ChannelHight < GutterDepth)
+        {
+            ChannelHight = GutterDepth;
+        }
+
+        var Gx1 = GutterWidth;
+        var Gy1 = GutterWidth * CrossSlopeW;
+        var Gx2 = GutterWidth + (GutterDepth - Gy1) / CrossSlopeX;
+        var Gy2 = GutterDepth;
+        if (Gy2 < Gy1)
+        {
+            Gx2 = GutterDepth / CrossSlopeW;
+        }
+        var ChannelWidth = GutterSpread;
+        if (ChannelWidth < GutterWidth)
+        {
+            ChannelWidth = GutterWidth;
+        }
+
+        context.lineWidth = 1;
+
+        var coordColor = 'rgb(200,200,200)';
+        var textColor = 'rgb(0,0,200)';
+        var waterColor = 'rgb(146,219,255)';
+        var gutterColor = 'rgb(100,100,100)';
+
+        var X_dim = canvas.width * 0.05;
+        var X_min = canvas.width * 0.1;
+        var X_max = canvas.width * 0.9;
+        var Y_dim = canvas.height * 0.95;
+        var Y_min = canvas.height * 0.9;
+        var Y_max = canvas.height * 0.1;
+
+        var StepX = GetScale(ChannelWidth);
+        var StepY = GetScale(ChannelHight);
+
+        var ScaleX = canvas.width * 0.8 / (ChannelWidth + 2 * StepX);
+        var ScaleY = canvas.height * 0.8 / (ChannelHight + 2 * StepY);
+        var X_zero = X_min + StepX * ScaleX;
+        var Y_zero = Y_min - StepY * ScaleY;
+
+        context.font = "10pt Calibri";
+        // textAlign aligns text horizontally relative to placement
+        context.textAlign = "center";
+        // textBaseline aligns text vertically relative to font style
+        context.textBaseline = "middle";
+        for (var i = 0; i <= (X_max - X_zero) / ScaleX; i += StepX)
+        {
+            var x = X_zero + i * ScaleX;
+            context.fillStyle = textColor;
+            context.fillText(Math.round(i * 100) / 100, x, Y_dim);
+            context.moveTo(x, Y_min);
+            context.lineTo(x, Y_max);
+            context.strokeStyle = coordColor;
+            context.stroke();
+        }
+        context.moveTo(X_min, Y_min);
+        context.lineTo(X_min, Y_max);
+        context.strokeStyle = coordColor;
+        context.stroke();
+        context.moveTo(X_max, Y_min);
+        context.lineTo(X_max, Y_max);
+        context.strokeStyle = coordColor;
+        context.stroke();
+
+        var y = Y_zero;
+        for (var i = 0; i < (Y_zero - Y_max) / ScaleY; i += StepY)
+        {
+            var y = Y_zero - i * ScaleY;
+            context.fillStyle = textColor;
+            context.fillText(Math.round(i * 100) / 100, X_dim, y);
+            context.moveTo(X_min, y);
+            context.lineTo(X_max, y);
+            context.strokeStyle = coordColor;
+            context.stroke();
+        }
+        context.moveTo(X_min, Y_min);
+        context.lineTo(X_max, Y_min);
+        context.strokeStyle = coordColor;
+        context.stroke();
+        context.moveTo(X_min, Y_max);
+        context.lineTo(X_max, Y_max);
+        context.strokeStyle = coordColor;
+        context.stroke();
+        
+        context.beginPath();
+        context.moveTo(X_zero, Y_zero - (Gy2 * ScaleY));
+        context.lineTo(X_zero, Y_zero);
+        if (Gy1 < Gy2)
+        {
+            context.lineTo(X_zero + Gx1 * ScaleX, Y_zero - (Gy1 * ScaleY));
+        }
+        context.lineTo(X_zero + Gx2 * ScaleX, Y_zero - (Gy2 * ScaleY));
+        // complete custom shape
+        context.closePath();
+        context.fillStyle = waterColor;
+        context.fill();
+
+        context.beginPath();
+        context.lineWidth = 3;
+        context.moveTo(X_min, y);
+        context.lineTo(X_zero, y);
+        context.lineTo(X_zero, Y_zero);
+        context.lineTo(X_zero + Gx1 * ScaleX, Y_zero - (Gy1 * ScaleY));
+        var Depth_max = GutterWidth * CrossSlopeW + ((X_max - X_zero) / ScaleX - GutterWidth) * CrossSlopeX;
+        context.lineTo(X_max, Y_zero - (Depth_max * ScaleY));
+        context.strokeStyle = gutterColor;
+        context.stroke();
+    }
+
+    function GetScale(ChannelWidth)
+    {
+        var StepX = 0.5;
+        if (ChannelWidth <= 0.5)
+            StepX = 0.1;
+        else if (ChannelWidth <= 1)
+            StepX = 0.25;
+        else if (ChannelWidth <= 4.5)
+            StepX = 0.5;
+        else if (ChannelWidth <= 10)
+            StepX = 1;
+        else if (ChannelWidth <= 20)
+            StepX = 2;
+        else if (ChannelWidth <= 75)
+            StepX = 5;
+        else if (ChannelWidth <= 150)
+            StepX = 10;
+        else if (ChannelWidth <= 200)
+            StepX = 20;
+        else if (ChannelWidth <= 500)
+            StepX = 50;
+        else
+            StepX = 100;
+
+        return StepX;
+    }
+</script>
+
+@using (Html.BeginForm(FormMethod.Post))
+{
+
+<fieldset>
+    <legend>Inlet</legend>
+    <table id="Inlet" title="Inlet">
+        <tr></tr>
+        <tr>
+            <td>
+    <table id="gutterTable" title="Gutter">
+        <tr>
+            <td>Items</td>
+            <td>Value</td>
+            <td>Unit</td>
+        </tr>
+        @*<tr>
+            <td>Name:</td>
+            <td>@Html.EditorFor(model => model.Name)</td>
+            <td></td>
+        </tr>*@
+        <tr>
+            <td>Longitudinal Slope:</td>
+            <td>@Html.EditorFor(model => model.inletData.LongitudinalSlope)</td>
+            <td>(ft/ft)</td>
+        </tr>
+        <tr>
+            <td>Cross Slope W:</td>
+            <td>@Html.EditorFor(model => model.inletData.CrossSlopeW)</td>
+            <td>(ft/ft)</td>
+        </tr>
+        <tr>
+            <td>Cross Slope X:</td>
+            <td>@Html.EditorFor(model => model.inletData.CrossSlopeX)</td>
+            <td>(ft/ft)</td>
+        </tr>
+        <tr>
+            <td>Gutter Width:</td>
+            <td>@Html.EditorFor(model => model.inletData.GutterWidth)</td>
+            <td>(ft)</td>
+        </tr>
+        <tr>
+            <td>Manning's Roughness:</td>
+            <td>@Html.EditorFor(model => model.ManningRoughness)</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Design Flow:</td>
+            <td>@Html.EditorFor(model => model.DesignFlow)</td>
+            <td>(cfs)</td>
+        </tr>
+        @*<tr>
+            <td>Inlet:</td>
+            <td></td>
+            <td></td>
+        </tr>*@
+        <tr>
+            <td>Inlet Location:</td>
+            <td class="editor-field">
+            @Html.DropDownListFor(model => model.inletData.InletLocation, Enum.GetValues(typeof(HydraulicsService.EnumInletLocation)).Cast<HydraulicsService.EnumInletLocation>().Select(x => new SelectListItem { Text = x.ToString(), Value = ((int)x).ToString(), Selected = ((int)@Model.inletData.InletLocation == (int)x) }))
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Inlet Type:</td>
+            <td>
+            @Html.DropDownListFor(model => model.inletData.InletType, Enum.GetValues(typeof(HydraulicsService.EnumInletType)).Cast<HydraulicsService.EnumInletType>().Select(x => new SelectListItem { Text = x.ToString(), Value = ((int)x).ToString(), Selected = ((int)@Model.inletData.InletType == (int)x) }))
+            </td>
+            <td></td>
+        </tr>
+        @*<tr>
+            <td>Grate Type:</td>
+            <td>
+            @Html.DropDownListFor(model => model.inletData.GrateType, Enum.GetValues(typeof(HydraulicsService.EnumGrateType)).Cast<HydraulicsService.EnumGrateType>().Select(x => new SelectListItem { Text = x.ToString(), Value = ((int)x).ToString(), Selected = ((int)@Model.inletData.GrateType == (int)x) }))
+            </td>
+            <td></td>
+        </tr>*@
+        <tr>
+            <td>Grate Width:</td>
+            <td>@Html.EditorFor(model => model.inletData.GrateWidth)</td>
+            <td>(ft)</td>
+        </tr>
+        <tr>
+            <td>Grate Length:</td>
+            <td>@Html.EditorFor(model => model.inletData.GrateLength)</td>
+            <td>(ft)</td>
+        </tr>
+        <tr>
+            <td>Inlet Length:</td>
+            <td>@Html.EditorFor(model => model.inletData.InletLength)</td>
+            <td>(ft)</td>
+        </tr>
+        @*<tr>
+            <td>Curb Opening High:</td>
+            <td>@Html.EditorFor(model => model.inletData.CurbOpeningHigh)</td>
+            <td>(in)</td>
+        </tr>
+        <tr>
+            <td>Local Depression:</td>
+            <td>@Html.EditorFor(model => model.inletData.LocalDepression)</td>
+            <td>(in)</td>
+        </tr>*@
+        <tr>
+            <td>Result:</td>
+            <td></td>
+            <td></td>
+        </tr>
+        @*<tr>
+            <td>Gutter Spread:</td>
+            <td>@Html.EditorFor(model => model.inletResult.GutterIn.GutterSpread)</td>
+            <td>(ft)</td>
+        </tr>
+        <tr>
+            <td>Gutter Depth:</td>
+            <td>@Html.EditorFor(model => model.inletResult.GutterIn.GutterDepth)</td>
+            <td>(in)</td>
+        </tr>
+        <tr>
+            <td>Gutter Area:</td>
+            <td>@Html.EditorFor(model => model.inletResult.GutterIn.GutterArea)</td>
+            <td>(ft^2)</td>
+        </tr>
+        <tr>
+            <td>Gutter Velocity:</td>
+            <td>@Html.EditorFor(model => model.inletResult.GutterIn.GutterVelocity)</td>
+            <td>(ft)</td>
+        </tr>
+        <tr>
+            <td>Eo:</td>
+            <td>@Html.EditorFor(model => model.inletResult.GutterIn.Eo)</td>
+            <td></td>
+        </tr>*@
+        <tr>
+            <td>Eo':</td>
+            <td>@Html.EditorFor(model => model.inletResult.EoEx)</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Intercepted Flow:</td>
+            <td>@Html.EditorFor(model => model.inletResult.InterceptedFlow)</td>
+            <td>(cfs)</td>
+        </tr>
+        <tr>
+            <td>Bypass Flow:</td>
+            <td>@Html.EditorFor(model => model.inletResult.BypassFlow)</td>
+            <td>(cfs)</td>
+        </tr>
+        <tr>
+            <td>Approach Velocity:</td>
+            <td>@Html.EditorFor(model => model.inletResult.ApproachVelocity)</td>
+            <td>(ft)</td>
+        </tr>
+        <tr>
+            <td>Splashover Velocity:</td>
+            <td>@Html.EditorFor(model => model.inletResult.SplashoverVelocity)</td>
+            <td>(ft)</td>
+        </tr>
+        <tr>
+            <td>Efficiency:</td>
+            <td>@Html.EditorFor(model => model.inletResult.Efficiency)</td>
+            <td></td>
+        </tr>
+        @*<tr>
+            <td>Inlet Depth:</td>
+            <td>@Html.EditorFor(model => model.inletResult.InletDepth)</td>
+            <td>(in)</td>
+        </tr>
+        <tr>
+            <td>Inlet Spread:</td>
+            <td>@Html.EditorFor(model => model.inletResult.InletSpread)</td>
+            <td>(ft)</td>
+        </tr>
+        <tr>
+            <td>Inlet Weir Control or not:</td>
+            <td>@Html.EditorFor(model => model.inletResult.InletWeirControl)</td>
+            <td></td>
+        </tr>*@
+    </table>
+
+<div id="calculate">
+    <div id="calculatebtn">
+        <input id="Calculate" type="submit" value="Calculate" />
+    </div>
+</div>
+
+            </td>
+            <td>
+    <canvas id="inletCanvas" style="width:800px;height:400px" style="border:1px solid #c3c3c3;">
+    <p>Your browser does not support the canvas element.</p>
+    </canvas>
+            </td>
+        </tr>
+    </table>
+</fieldset>
+
+}
