@@ -7,7 +7,7 @@ using System.Web.Services;
 namespace HydraulicsService
 {
     /// <summary>
-    /// Summary description for CriticalDepth
+    /// Summary description for CriticalDepthService
     /// </summary>
     [WebService(Namespace = "http://tempuri.org/")]
     [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
