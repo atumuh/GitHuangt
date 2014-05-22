@@ -16,29 +16,90 @@ namespace HydraulicsService
     // [System.Web.Script.Services.ScriptService]
     public class CriticalDepthService : System.Web.Services.WebService
     {
+        internal const double PI = 3.14159265358979323846;
         internal const double g = 32.16;
+        internal const double TOLERANCE = 1e-8;
+        internal const double k_AngleStart = 0.05;
+        internal const double k_Tolerance = 0.001;
+        internal const int k_IterationTimes = 10000;
+
+        private double GetDepthByAngle(double angleT, double diameter)
+        {
+            return ((diameter * 0.5) * (1 - Math.Cos(angleT * 0.5)));
+        }
+
+        private double GetAreaByAngle(double angleT, double diameter)
+        {
+            return ((diameter * diameter) * 0.125) * (angleT - Math.Sin(angleT));
+        }
+
+        private double GetTopWidthByDepth(double depth, double diameter)
+        {
+            return (diameter * Math.Sin(Math.Acos((((depth * 2) - diameter) / diameter))));
+        }
+
+        private double ComputeFroudeNumber(double designFlow, double topWidth, double area)
+        {
+            return Math.Sqrt((Math.Pow(designFlow, 2.0) * topWidth) / (Math.Pow(area, 3.0) * g));
+        }
+
+        private double CalculateFroudeNumber(double angleT, double designFlow, double diameter)
+        {
+            double depth = GetDepthByAngle(angleT, diameter);
+            double area = GetAreaByAngle(angleT, diameter);
+            double topWidth = GetTopWidthByDepth(depth, diameter);
+            double froudeNumber = ComputeFroudeNumber(designFlow, topWidth, area);
+            return froudeNumber;
+        }
+
+        private bool FuzzyGreaterThanZero(double value)
+        {
+            return value > TOLERANCE;
+        }
 
         [WebMethod]
-        public double CalculateCriticalDepth_Cricular(double DesignFlow, double Diameter)
+        public double CalculateCriticalDepth_Cricular(double designFlow, double diameter)
         {
-            double T = 0.5;
-            //Compute cir. critical depth by traditional method
-            for (; T < Math.PI * 2; T += 0.001)
+            if (!FuzzyGreaterThanZero(designFlow) ||
+                !FuzzyGreaterThanZero(diameter))
             {
-                double H = (Diameter * 0.5) * (1 - Math.Cos(T * 0.5)); // Hydraulic Depth (HGL) as a function of angle T
-                double Area = ((Diameter * Diameter) * 0.125) * (T - Math.Sin(T)); // Cross-sectional Area as a function of T and radius
-                double TCR = T; // Capture TCR
-                // Critical Depth is when Froude//s Number = 1.0 +/- 0.001
-                //// TW = (2 * (H * (Diameter   - H))) ^ 0.5
-                double TW = Diameter * Math.Sin(Math.Acos((((2 * H) - Diameter) / Diameter)));
-                double F = ((Math.Pow(DesignFlow, 2) * TW) / (Math.Pow(Area, 3) * g));
-                if (Math.Abs(1.0 - F) < 0.005)  // Critical Depth is when Froude//s Number = 1.0 +/- 0.001
+                return 0;
+            }
+
+            double froudeNumber = 1.0;
+            double angleT1 = k_AngleStart;
+            double dist1 = Math.Pow(CalculateFroudeNumber(angleT1, designFlow, diameter), 2.0) - froudeNumber;
+            double angleT2 = PI * 2;
+            double dist2 = Math.Pow(CalculateFroudeNumber(angleT2, designFlow, diameter), 2.0) - froudeNumber;
+            if (FuzzyGreaterThanZero(dist1 * dist2))
+            {
+                return diameter;
+            }
+
+            double angleT = (angleT1 + angleT2) / 2.0;
+            double dist = Math.Pow(CalculateFroudeNumber(angleT, designFlow, diameter), 2.0) - froudeNumber;
+            int iTimes = 0;
+            // Critical Depth is when Froude's Number = 1.0 +/- 0.001
+            while (FuzzyGreaterThanZero(Math.Abs(dist) - k_Tolerance))
+            {
+                if (FuzzyGreaterThanZero(dist * dist1))
                 {
-                    return H;
+                    angleT1 = angleT;
+                }
+                else
+                {
+                    angleT2 = angleT;
+                }
+                angleT = (angleT1 + angleT2) / 2.0;
+                dist = Math.Pow(CalculateFroudeNumber(angleT, designFlow, diameter), 2.0) - froudeNumber;
+                iTimes++;
+                if (iTimes > k_IterationTimes)
+                {
+                    return diameter;
                 }
             }
 
-            return Diameter;
+            return GetDepthByAngle(angleT, diameter);
         }
     }
 }
