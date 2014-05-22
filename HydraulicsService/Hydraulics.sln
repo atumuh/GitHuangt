@@ -1,16 +1,16 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydraulicsService", "HydraulicsService\HydraulicsService.csproj", "{2518EC96-F25D-4B08-BCA5-14D04C731594}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydraulicsService.Tests", "TestHydraulicsService\HydraulicsService.Tests.csproj", "{9C617F37-5B06-4380-9AED-B3BCB41458DC}"
-EndProject
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4C9BAF5D-43B5-4165-9B96-5BF859D75E23}"
 	ProjectSection(SolutionItems) = preProject
 		HydraulicsService.vsmdi = HydraulicsService.vsmdi
 		Local.testsettings = Local.testsettings
 		TraceAndTestImpact.testsettings = TraceAndTestImpact.testsettings
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydraulicsService", "HydraulicsService\HydraulicsService.csproj", "{2518EC96-F25D-4B08-BCA5-14D04C731594}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydraulicsService.Tests", "TestHydraulicsService\HydraulicsService.Tests.csproj", "{9C617F37-5B06-4380-9AED-B3BCB41458DC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydraulicsWeb", "HydraulicsWeb\HydraulicsWeb.csproj", "{68D35CFF-0B6E-4FFF-A269-D20DAF157157}"
 	ProjectSection(ProjectDependencies) = postProject
